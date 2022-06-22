@@ -1,24 +1,44 @@
-from flask import Flask, request, jsonify, abort
-from flask.templating import render_template
-from model import predict
-from features import features_list, feature_form_structure
+#Import Libraries
+from flask import Flask, request, render_template
+import pickle
+from sklearn.preprocessing import StandardScaler
 
+
+ 
+#import model # load model.py
+ 
 app = Flask(__name__)
-
-
+model = pickle.load(open('model_house_price_prediction.pkl', 'rb'))
+@app.route('/',methods=['GET'])
+ 
+# render htmp page
 @app.route('/')
-def hello_world():
-    i = 0
-    return render_template('index.html', feature_form_structure=feature_form_structure, i=i)
+def home():
+    return render_template('index.html')
+ 
+# get user input and the predict the output and return to user
+@app.route('/predict',methods=['POST'])
+def predict():
+     
+    #take data from form and store in each feature    
 
-
-@app.route('/predict', methods=['POST'])
-def create_task():
-    if not request.json:
-        abort(400)
-    prediction = predict(request.json)
-    return jsonify({'done': True, 'prediction': prediction[0]}), 201
-
-
-if __name__ == '__main__':
+        YearBuilt = int(request.form['YearBuilt'])
+        GarageArea=float(request.form['GarageArea'])
+        TotRmsAbvGrd=int(request.form['TotRmsAbvGrd'])
+    
+        OverallQua=int(request.form['OverallQua'])
+        GrLivArea=int(request.form['GrLivArea'])
+        FullBath=float(request.form['FullBath'])
+     
+    # predict the price of house by calling model.py
+        predicted_price = model.model_house_price_prediction(YearBuilt,GarageArea,TotRmsAbvGrd,OverallQua,GrLivArea,FullBath)       
+ 
+ 
+    # render the html page and show the output
+        return render_template('index.html', prediction_text='Predicted Price House is {}'.format(predicted_price))
+ 
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port="8080")
+     
+if __name__ == "__main__":
     app.run(debug=True)
